@@ -57,3 +57,24 @@ const char *getPassword(struct User u)
     fclose(fp);
     return "no user found";
 }
+int loadAllUsers (struct User *out)
+{
+    FILE *fp;
+    struct User userChecker;
+    int count = 0;
+
+    if ((fp = fopen("./data/users.txt", "r")) == NULL)
+    {
+        printf("Error! opening file");
+        exit(1);
+    }
+
+    while (fscanf(fp, "%d %s %s", &userChecker.id, userChecker.name, userChecker.password) != EOF)
+    {
+        out[count] = userChecker;
+        count++;
+    }
+
+    fclose(fp);
+    return count;
+}

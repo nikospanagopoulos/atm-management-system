@@ -30,12 +30,14 @@ struct User
     int id;
     char name[50];
     char password[50];
+
 };
 
 // authentication functions
 void loginMenu(char a[50], char pass[50]);
 void registerMenu(char a[50], char pass[50]);
 const char *getPassword(struct User u);
+int loadAllUsers (struct User *out);
 
 // system function
 void createNewAcc(struct User u);
