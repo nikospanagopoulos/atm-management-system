@@ -18,6 +18,7 @@ int getAccountFromFile(FILE *ptr, char name[50], struct Record *r)
                   r->accountType) != EOF;
 }
 
+
 void saveAccountToFile(FILE *ptr, struct User u, struct Record r)
 {
     fprintf(ptr, "%d %d %s %d %d/%d/%d %s %d %.2lf %s\n\n",
@@ -34,6 +35,49 @@ void saveAccountToFile(FILE *ptr, struct User u, struct Record r)
             r.accountType);
 }
 
+int loadAllRecords(struct Record *out)
+{
+    FILE *ptr = fopen(RECORDS, "r");
+    if (ptr == NULL)
+    {
+        printf("Error! opening file");
+        exit(1);    
+    }
+    int i = 0;
+    char name[50];
+    while (getAccountFromFile(ptr, name, &out[i]))
+    {
+        i++;
+    }
+    fclose(ptr);
+    return i;
+}
+
+void saveAllRecords(struct Record *records, int count)
+{
+    FILE *ptr = fopen(RECORDS, "w");
+    if (ptr == NULL)
+    {
+        printf("Error! opening file");
+        exit(1);    
+    }
+    for (int i = 0; i < count; i++)
+    {
+        fprintf(ptr, "%d %d %s %d %d/%d/%d %s %d %.2lf %s\n\n",
+                records[i].id,
+        records[i].userId,
+        records[i].name,
+                records[i].accountNbr,
+                records[i].deposit.month,
+                records[i].deposit.day,
+                records[i].deposit.year,
+                records[i].country,
+                records[i].phone,
+                records[i].amount,
+                records[i].accountType);
+    }
+    fclose(ptr);
+}
 void stayOrReturn(int notGood, void f(struct User u), struct User u)
 {
     int option;
