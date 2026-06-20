@@ -68,21 +68,13 @@ void initMenu(struct User *u)
         switch (option)
         {
         case 1:
-            loginMenu(u->name, u->password);
-            if (strcmp(u->password, getPassword(*u)) == 0)
-            {
-                printf("\n\nPassword Match!");
-            }
-            else
-            {
-                printf("\nWrong password!! or User Name\n");
-                exit(1);
-            }
+           if (loginUser(u) == 1)
+           {
             r = 1;
+           }
             break;
         case 2:
-            // student TODO : add your **Registration** function
-            // here
+            if (registerUser(u) == 1)
             r = 1;
             break;
         case 3:

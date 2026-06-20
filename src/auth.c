@@ -73,3 +73,47 @@ int loadAllUsers (struct User *out)
     fclose(fp);
     return i;
 }
+int loginUser(struct User *u)
+{
+    printf("Enter username: ");
+    scanf("%s", u->name);
+    printf("Enter password: ");
+    scanf("%s", u->password);
+    struct User users[100];
+    int count = loadAllUsers(users);
+    for (int i = 0; i < count; i++)
+    {
+        if (strcmp(users[i].name, u->name) == 0 && strcmp(users[i].password, u->password) == 0)
+        {            u->id = users[i].id;
+            return 1;
+        }  
+}
+    printf("Invalid username or password\n");
+    return 0;
+}
+
+int registerUser (struct User *u)
+{
+   printf("Enter username: ");
+    scanf("%s", u->name);
+    printf("Enter password: ");
+    scanf("%s", u->password);
+    struct User users[100];
+    int count = loadAllUsers(users);
+    for (int i = 0; i < count; i++)    {
+        if (strcmp(users[i].name, u->name) == 0)
+        {            printf("Username already exists\n");
+            return 0;
+        }
+    }         
+   u->id = count;
+    FILE *fp = fopen("./data/users.txt", "a");
+    if (fp == NULL)
+    {
+        printf("Error! opening file");
+        exit(1);
+    }
+    fprintf(fp, "%d %s %s\n", u->id, u->name, u->password);
+    fclose(fp);
+    return 1;
+}   
