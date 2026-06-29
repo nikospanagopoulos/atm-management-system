@@ -4,7 +4,7 @@ const char *RECORDS = "./data/records.txt";
 
 int getAccountFromFile(FILE *ptr, char name[50], struct Record *r)
 {
-    return fscanf(ptr, "%d %d %s %d %d/%d/%d %s %d %lf %s",
+    return fscanf(ptr, "%d %d %s %d %d/%d/%d %s %s %lf %s",
                   &r->id,
 		  &r->userId,
 		  name,
@@ -13,7 +13,7 @@ int getAccountFromFile(FILE *ptr, char name[50], struct Record *r)
                   &r->deposit.day,
                   &r->deposit.year,
                   r->country,
-                  &r->phone,
+                  r->phone,
                   &r->amount,
                   r->accountType) != EOF;
 }
@@ -21,7 +21,7 @@ int getAccountFromFile(FILE *ptr, char name[50], struct Record *r)
 
 void saveAccountToFile(FILE *ptr, struct User u, struct Record r)
 {
-    fprintf(ptr, "%d %d %s %d %d/%d/%d %s %d %.2lf %s\n\n",
+    fprintf(ptr, "%d %d %s %d %d/%d/%d %s %s %.2lf %s\n\n",
             r.id,
 	    u.id,
 	    u.name,
@@ -63,7 +63,7 @@ void saveAllRecords(struct Record *records, int count)
     }
     for (int i = 0; i < count; i++)
     {
-        fprintf(ptr, "%d %d %s %d %d/%d/%d %s %d %.2lf %s\n\n",
+        fprintf(ptr, "%d %d %s %d %d/%d/%d %s %s %.2lf %s\n\n",
                 records[i].id,
         records[i].userId,
         records[i].name,
@@ -156,6 +156,7 @@ noAccount:
     printf("\nEnter the account number:");
     scanf("%d", &r.accountNbr);
 
+    fseek(pf, 0, SEEK_SET);
     while (getAccountFromFile(pf, userName, &cr))
     {
         if (strcmp(userName, u.name) == 0 && cr.accountNbr == r.accountNbr)
@@ -167,11 +168,16 @@ noAccount:
     printf("\nEnter the country:");
     scanf("%s", r.country);
     printf("\nEnter the phone number:");
-    scanf("%d", &r.phone);
+    scanf("%s", r.phone);
     printf("\nEnter amount to deposit: $");
     scanf("%lf", &r.amount);
-    printf("\nChoose the type of account:\n\t-> saving\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
+    printf("\nChoose the type of account:\n\t-> savingS\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
     scanf("%s", r.accountType);
+
+    struct Record allRecords[100];
+    int count = loadAllRecords(allRecords);
+    r.id = count;
+    r.userId = u.id;
 
     saveAccountToFile(pf, u, r);
 
@@ -193,7 +199,7 @@ void checkAllAccounts(struct User u)
         if (strcmp(userName, u.name) == 0)
         {
             printf("_____________________\n");
-            printf("\nAccount number:%d\nDeposit Date:%d/%d/%d \ncountry:%s \nPhone number:%d \nAmount deposited: $%.2f \nType Of Account:%s\n",
+            printf("\nAccount number:%d\nDeposit Date:%d/%d/%d \ncountry:%s \nPhone number:%s \nAmount deposited: $%.2f \nType Of Account:%s\n",
                    r.accountNbr,
                    r.deposit.day,
                    r.deposit.month,
