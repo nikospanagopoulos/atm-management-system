@@ -171,7 +171,7 @@ noAccount:
     scanf("%s", r.phone);
     printf("\nEnter amount to deposit: $");
     scanf("%lf", &r.amount);
-    printf("\nChoose the type of account:\n\t-> savingS\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
+    printf("\nChoose the type of account:\n\t-> savings\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
     scanf("%s", r.accountType);
 
     struct Record allRecords[100];
@@ -189,6 +189,7 @@ void checkAllAccounts(struct User u)
 {
     char userName[100];
     struct Record r;
+    int found = 0;
 
     FILE *pf = fopen(RECORDS, "r");
 
@@ -198,6 +199,7 @@ void checkAllAccounts(struct User u)
     {
         if (strcmp(userName, u.name) == 0)
         {
+            found =1;
             printf("_____________________\n");
             printf("\nAccount number:%d\nDeposit Date:%d/%d/%d \ncountry:%s \nPhone number:%s \nAmount deposited: $%.2f \nType Of Account:%s\n",
                    r.accountNbr,
@@ -210,6 +212,8 @@ void checkAllAccounts(struct User u)
                    r.accountType);
         }
     }
+    if (!found)
+        printf("No accounts found!\n");
     fclose(pf);
     success(u);
 }
