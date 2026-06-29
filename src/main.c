@@ -1,8 +1,11 @@
 #include "header.h"
+#include <unistd.h>
 
 void mainMenu(struct User u)
 {
     int option;
+    do
+    {
     system("clear");
     printf("\n\n\t\t======= ATM =======\n\n");
     printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
@@ -50,20 +53,26 @@ void mainMenu(struct User u)
     default:
         printf("Invalid operation!\n");
     }
-};
+}while (option !=8);
+}
 
 void initMenu(struct User *u)
 {
+    if (isSystemLocked())
+    {
+        printf("System is locked! Contact the admin.\n");
+        exit(1);
+    }
     int r = 0;
     int option;
-    system("clear");
-    printf("\n\n\t\t======= ATM =======\n");
-    printf("\n\t\t-->> Feel free to login / register :\n");
-    printf("\n\t\t[1]- login\n");
-    printf("\n\t\t[2]- register\n");
-    printf("\n\t\t[3]- exit\n");
-    while (!r)
-    {
+     while (!r)
+     {
+        system("clear");
+        printf("\n\n\t\t======= ATM =======\n");
+        printf("\n\t\t-->> Feel free to login / register :\n");
+        printf("\n\t\t[1]- login\n");
+        printf("\n\t\t[2]- register\n");
+        printf("\n\t\t[3]- exit\n");
         scanf("%d", &option);
         switch (option)
         {
@@ -71,6 +80,11 @@ void initMenu(struct User *u)
            if (loginUser(u) == 1)
            {
             r = 1;
+           }
+           else
+           {
+            sleep(2);
+            while(getchar() != '\n');
            }
             break;
         case 2:

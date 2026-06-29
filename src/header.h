@@ -38,6 +38,9 @@ void loginMenu(char a[50], char pass[50]);
 void registerMenu(char a[50], char pass[50]);
 const char *getPassword(struct User u);
 int loadAllUsers (struct User *out);
+int isSystemLocked(void);
+int isUserLocked(char *name);
+int lockUser(char *name);
 int loginUser(struct User *u);
 int registerUser(struct User *u);
 
