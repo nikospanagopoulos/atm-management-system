@@ -49,5 +49,6 @@ void createNewAcc(struct User u);
 int loadAllRecords(struct Record *out);
 void saveAllRecords(struct Record *records, int count);
 void mainMenu(struct User u);
+void checkAccountDetails(struct User u);
 void checkAllAccounts(struct User u);
 #endif

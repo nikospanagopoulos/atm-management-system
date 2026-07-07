@@ -217,3 +217,47 @@ void checkAllAccounts(struct User u)
     fclose(pf);
     success(u);
 }
+
+void checkAccountDetails(struct User u)
+{
+    int accountNbr;
+    printf("Enter account number: ");
+    scanf("%d", &accountNbr);
+    system("clear");
+   
+    struct Record records[100];
+    int count = loadAllRecords(records);
+    int found = 0;
+
+   for (int i = 0; i < count; i++)
+   {
+        if (records[i].userId == u.id && records[i].accountNbr == accountNbr)
+        {
+            found = 1;
+             printf("Account number: %d\n", records[i].accountNbr);
+            printf("Deposit Date: %d/%d/%d\n", records[i].deposit.day, records[i].deposit.month, records[i].deposit.year);
+            printf("Country: %s\n", records[i].country);
+            printf("Phone: %s\n", records[i].phone);
+            printf("Amount: $%.2f\n", records[i].amount);
+            printf("Type: %s\n", records[i].accountType);
+  
+        if (strcmp(records[i].accountType, "savings") == 0)
+            printf("You will get $%.2f as interest on day %d of every month\n",
+                records[i].amount * 0.07 / 12, records[i].deposit.day);
+        else if (strcmp(records[i].accountType, "current") == 0)
+            printf("You will not get interests because the account is of type current\n");
+        else if (strcmp(records[i].accountType, "fixed01") == 0)
+            printf("You will get $%.2f as interest on %d/%d/%d\n",
+                records[i].amount * 0.04, records[i].deposit.day, records[i].deposit.month, records[i].deposit.year + 1);
+        else if (strcmp(records[i].accountType, "fixed02") == 0)
+            printf("You will get $%.2f as interest on %d/%d/%d\n",
+                records[i].amount * 0.05 * 2, records[i].deposit.day, records[i].deposit.month, records[i].deposit.year + 2);
+        else if (strcmp(records[i].accountType, "fixed03") == 0)
+            printf("You will get $%.2f as interest on %d/%d/%d\n",
+                records[i].amount * 0.08 * 3, records[i].deposit.day, records[i].deposit.month, records[i].deposit.year + 3);
+        break;
+        }   
+}
+    stayOrReturn(found, checkAccountDetails, u);
+}
+
