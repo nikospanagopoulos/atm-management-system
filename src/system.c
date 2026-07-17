@@ -4,24 +4,38 @@ const char *RECORDS = "./data/records.txt";
 
 int getAccountFromFile(FILE *ptr, char name[50], struct Record *r)
 {
-    return fscanf(ptr, "%d %d %s %d %d/%d/%d %s %s %lf %s",
-                  &r->id,
-		  &r->userId,
-		  name,
-                  &r->accountNbr,
-                  &r->deposit.month,
-                  &r->deposit.day,
-                  &r->deposit.year,
-                  r->country,
-                  r->phone,
-                  &r->amount,
-                  r->accountType) != EOF;
+    char line[512];
+    while (fgets(line, sizeof(line), ptr) != NULL)
+    {
+        if (line[0] == '\n' || line[0] == '\0')
+            continue;
+             int matched = sscanf(line, "%d|%d|%49[^|]|%d|%d/%d/%d|%99[^|]|%19[^|]|%lf|%9[^|\n]",
+                              &r->id,
+                              &r->userId,
+                              name,
+                              &r->accountNbr,
+                              &r->deposit.month,
+                              &r->deposit.day,
+                              &r->deposit.year,
+                              r->country,
+                              r->phone,
+                              &r->amount,
+                              r->accountType);
+
+        if (matched == 11)
+        {
+            strcpy(r->name, name);
+            return 1;
+        }
+        return 0;
+    }
+    return 0;
 }
 
 
 void saveAccountToFile(FILE *ptr, struct User u, struct Record r)
 {
-    fprintf(ptr, "%d %d %s %d %d/%d/%d %s %s %.2lf %s\n\n",
+    fprintf(ptr, "%d|%d|%s|%d|%d/%d/%d|%s|%s|%.2lf|%s\n\n",
             r.id,
 	    u.id,
 	    u.name,
@@ -43,9 +57,9 @@ int loadAllRecords(struct Record *out)
         printf("Error! opening file");
         exit(1);    
     }
+    char name [50];
     int i = 0;
-    char name[50];
-    while (getAccountFromFile(ptr, name, &out[i]))
+    while (i < 100 &&getAccountFromFile(ptr, name, &out[i]))
     {
         i++;
     }
@@ -63,7 +77,7 @@ void saveAllRecords(struct Record *records, int count)
     }
     for (int i = 0; i < count; i++)
     {
-        fprintf(ptr, "%d %d %s %d %d/%d/%d %s %s %.2lf %s\n\n",
+        fprintf(ptr, "%d|%d|%s|%d|%d/%d/%d|%s|%s|%.2lf|%s\n\n",
                 records[i].id,
         records[i].userId,
         records[i].name,
@@ -78,6 +92,7 @@ void saveAllRecords(struct Record *records, int count)
     }
     fclose(ptr);
 }
+
 void stayOrReturn(int notGood, void f(struct User u), struct User u)
 {
     int option;
@@ -166,7 +181,9 @@ noAccount:
         }
     }
     printf("\nEnter the country:");
-    scanf("%s", r.country);
+    while (getchar() != '\n');
+    fgets(r.country, sizeof(r.country), stdin);
+    r.country[strcspn(r.country, "\n")] = '\0';
     printf("\nEnter the phone number:");
     scanf("%s", r.phone);
     printf("\nEnter amount to deposit: $");
@@ -260,4 +277,52 @@ void checkAccountDetails(struct User u)
 }
     stayOrReturn(found, checkAccountDetails, u);
 }
+
+
+void updateAccount(struct User u)
+{
+    int accountNbr;
+    printf("Enter account number: ");
+    scanf("%d", &accountNbr);
+    system ("clear");
+
+    struct Record records[100];
+    int count = loadAllRecords(records);
+    int found = 0;
+
+    for (int i =0; i < count; i++)
+    {
+        if (records[i].userId == u.id && records[i].accountNbr == accountNbr)
+        {
+            found = 1;
+            int choice;
+        invalidChoice:
+            printf("Update (1) phone or (2) country? ");
+            scanf("%d", &choice);
+            while (getchar() != '\n');
+
+            if (choice ==1)
+            {
+                printf("New phone: ");
+                fgets(records[i].phone, sizeof(records[i].phone), stdin);
+                records[i].phone[strcspn(records[i].phone, "\n")] = '\0';
+            }
+            else if (choice ==2)
+            {
+                printf("New country: ");
+                fgets(records[i].country, sizeof(records[i].country), stdin);
+                records[i].country[strcspn(records[i].country, "\n")] = '\0';
+            }
+            else
+            {
+                printf("Insert a valid operation!\n");
+                goto invalidChoice;
+            }
+
+            saveAllRecords(records, count);
+            break;
+            }
+        }
+    stayOrReturn(found, updateAccount, u);
+    }
 

@@ -25,12 +25,11 @@ void mainMenu(struct User u)
         createNewAcc(u);
         break;
     case 2:
-        // student TODO : add your **Update account information** function
-        // here
+        updateAccount(u);
         break;
     case 3:
        checkAccountDetails(u);
-        break;
+       break;
     case 4:
         checkAllAccounts(u);
         break;
@@ -47,6 +46,7 @@ void mainMenu(struct User u)
         // here
         break;
     case 8:
+        system("clear");
         exit(1);
         break;
     default:
@@ -91,13 +91,14 @@ void initMenu(struct User *u)
             r = 1;
             break;
         case 3:
+          system("clear");
             exit(1);
             break;
         default:
             printf("Insert a valid operation!\n");
         }
     }
-};
+}
 
 int main()
 {
