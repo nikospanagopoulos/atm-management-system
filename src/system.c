@@ -326,3 +326,85 @@ void updateAccount(struct User u)
     stayOrReturn(found, updateAccount, u);
     }
 
+void makeTransaction(struct User u)
+{
+    int accountNbr;
+    printf("Enter account number: ");
+    scanf("%d", &accountNbr);
+    system("clear");
+
+    struct Record records[100];
+    int count = loadAllRecords(records);
+    int found = 0;
+
+    for (int i = 0; i < count; i++)
+    {
+        if (records[i].userId == u.id && records[i].accountNbr == accountNbr)
+        {
+            found = 1;
+
+            if (strcmp(records[i].accountType, "fixed01") == 0 ||
+                strcmp(records[i].accountType, "fixed02") == 0 ||
+                strcmp(records[i].accountType, "fixed03") == 0)
+                {
+                    printf("Transactions are not allowed for fixed accounts!\n");
+                   break;
+                }
+            int choice;
+            int changed = 0;
+        invalidChoice:
+            printf("Do you want to (1) deposit or (2) withdraw? ");
+            scanf("%d", &choice);
+
+            if (choice == 1)
+            {
+                double depositAmount;
+                printf("Enter amount to deposit: $");
+                scanf("%lf", &depositAmount);
+               
+                if (depositAmount <= 0)
+                {
+                    printf("Amount must be positive!\n");
+                    goto invalidChoice;
+                }
+            
+                records[i].amount += depositAmount;
+                changed = 1;
+                printf("Deposited $%.2f successfully!\n", depositAmount);
+
+            }
+            else if (choice == 2)
+            {
+                double withdrawAmount;
+                printf("Enter amount to withdraw: $");
+                scanf("%lf", &withdrawAmount);
+                
+                if (withdrawAmount <= 0)
+                {
+                    printf("Amount must be positive!\n");
+                    goto invalidChoice;
+                }
+
+                if (withdrawAmount > records[i].amount + 0.001)
+                {
+                    printf("Insufficient funds! Current balance: $%.2f\n", records[i].amount);
+                    goto invalidChoice;
+                }
+                records[i].amount -= withdrawAmount;
+                changed = 1;
+                printf("Withdrew $%.2f successfully!\n", withdrawAmount);
+            }
+            else
+            {
+                printf("Insert a valid operation!\n");
+                goto invalidChoice;
+            }
+        if (changed)
+        {
+            saveAllRecords(records, count);
+        }
+            break;
+        }
+    }
+    stayOrReturn(found, makeTransaction, u);
+}
