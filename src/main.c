@@ -40,8 +40,7 @@ void mainMenu(struct User u)
        removeAccount(u);
         break;
     case 7:
-        // student TODO : add your **Transfer ownership** function
-        // here
+        transferOwnership(u);
         break;
     case 8:
         system("clear");

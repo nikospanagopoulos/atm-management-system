@@ -471,3 +471,78 @@ void removeAccount(struct User u)
     }
     stayOrReturn(found, removeAccount, u);
 }   
+
+void transferOwnership (struct User u)
+{
+    int accountNbr;
+    printf("Enter account number: ");
+    scanf("%d", &accountNbr);
+    system("clear");
+
+    struct Record records[100];
+    int count = loadAllRecords(records);
+    int found = 0;
+
+    for (int i = 0; i < count; i++)
+    {
+        if (records[i].userId == u.id && records[i].accountNbr == accountNbr)
+        {
+            found = 1;
+            char newOwnerName[50];
+            printf("Enter the name of the new owner: ");
+            while (getchar() != '\n');
+            fgets(newOwnerName, sizeof(newOwnerName), stdin);
+            newOwnerName[strcspn(newOwnerName, "\n")] = '\0';
+
+            // Self-transfer check
+            if (strcmp(newOwnerName, u.name) == 0)
+            {
+                printf("😊 This account is already yours — no need to transfer it to yourself!\n");
+                break;
+            }
+            //Lookup the new owner using the exixting loadAllUsers()
+            struct User allUsers[100];
+            int userCount = loadAllUsers(allUsers);
+            int ownerIndex = -1;
+
+            for (int j = 0; j< userCount; j++)
+            {
+                if (strcmp(allUsers[j].name, newOwnerName) == 0)
+                {
+                    ownerIndex = j;
+                    break;
+                }
+            }
+            if (ownerIndex == -1)
+            {
+                printf("✖ No user found with the username \"%s\"!\n", newOwnerName);
+                break;
+            }
+
+            int choice;
+        invalidChoice:
+            printf("Are you sure you want to transfer this account to %s? (1) Yes (2) No: ", newOwnerName);
+            scanf("%d", &choice);
+
+            if (choice == 1)
+            {
+                records[i].userId = allUsers[ownerIndex].id;
+                strcpy(records[i].name, allUsers[ownerIndex].name);
+                saveAllRecords(records, count);
+                 printf("✔ Ownership of account #%d transferred to %s!\n", accountNbr, allUsers[ownerIndex].name);
+            }
+            else if (choice ==2)
+            {
+                printf("Transfer cancelled - nothing was changed.\n");
+            }
+            else
+            {
+                printf("Insert a valid operation!\n");
+                goto invalidChoice;
+            }
+            break;
+        }
+
+    }
+    stayOrReturn(found, transferOwnership, u);
+}
