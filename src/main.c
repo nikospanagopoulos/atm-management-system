@@ -7,8 +7,8 @@ void mainMenu(struct User u)
     do
     {
     system("clear");
-    printf("\n\n\t\t======= ATM =======\n\n");
-    printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
+    printf(BLUE "\n\n\t\t======= ATM =======\n\n" RESET);
+    printf(YELLOW "\n\t\t-->> Feel free to choose one of the options below <<--\n" RESET);
     printf("\n\t\t[1]- Create a new account\n");
     printf("\n\t\t[2]- Update account information\n");
     printf("\n\t\t[3]- Check accounts\n");
@@ -64,12 +64,12 @@ void initMenu(struct User *u)
      while (!r)
      {
         system("clear");
-        printf("\n\n\t\t======= ATM =======\n");
-        printf("\n\t\t-->> Feel free to login / register :\n");
+        printf(BLUE "\n\n\t\t======= ATM =======\n" RESET);
+        printf(YELLOW "\n\t\t-->> Feel free to login / register :\n" RESET);
         printf("\n\t\t[1]- login\n");
         printf("\n\t\t[2]- register\n");
         printf("\n\t\t[3]- exit\n");
-        scanf("%d", &option);
+        option = readInt("Enter your choice: ");
         switch (option)
         {
         case 1:
@@ -85,10 +85,17 @@ void initMenu(struct User *u)
             break;
         case 2:
             if (registerUser(u) == 1)
+            {
             r = 1;
+            }
+            else
+            {
+            sleep(2);
+            while(getchar() != '\n');
+            }
             break;
         case 3:
-          system("clear");
+            system("clear");
             exit(1);
             break;
         default:

@@ -93,19 +93,18 @@ void saveAllRecords(struct Record *records, int count)
     fclose(ptr);
 }
 
-void stayOrReturn(int notGood, void f(struct User u), struct User u)
+int stayOrReturn(int notGood, struct User u)
 {
     int option;
     if (notGood == 0)
     {
         system("clear");
-        printf("\n✖ Record not found!!\n");
+        printf(RED "\n✖ Record not found!!\n" RESET);
     invalid:
-        printf("\nEnter 0 to try again, 1 to return to main menu and 2 to exit:");
-        scanf("%d", &option);
+        option = readInt("\nEnter 0 to try again, 1 to go to the main menu, and 2 to exit: ");
         if (option == 0)
         {
-            f(u);
+            return 0;
         }
         else if (option == 1)
         {
@@ -119,14 +118,13 @@ void stayOrReturn(int notGood, void f(struct User u), struct User u)
         }
         else
         {
-            printf("Insert a valid operation!\n");
+            printf(RED "Insert a valid operation!\n" RESET);
             goto invalid;
         }
-        }
-        else
-        {
-        printf("\nEnter 1 to go to the main menu and 0 to exit:");
-        scanf("%d", &option);
+    }
+    else
+    {
+        option = readInt("\nEnter 1 to go to the main menu and 0 to exit: ");
         if (option == 1)
         {
         system("clear");
@@ -138,15 +136,36 @@ void stayOrReturn(int notGood, void f(struct User u), struct User u)
             exit(1);
         }
     }
+    return -1;
+}
+
+int readInt(const char *prompt)
+{
+    int value;
+    int result;
+
+    do
+    {
+        printf("%s", prompt);
+        result = scanf("%d", &value);
+
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+
+        if (result != 1)
+            printf(RED "Invalid input! Please enter a number.\n" RESET);
+
+    } while (result != 1);
+
+    return value;
 }
 
 void success(struct User u)
 {
     int option;
-    printf("\n✔ Success!\n\n");
+    printf(GREEN "\n✔ Success!\n\n" RESET);
 invalid:
-    printf("Enter 1 to go to the main menu and 0 to exit!\n");
-    scanf("%d", &option);
+    option = readInt("Enter 1 to go to the main menu and 0 to exit: ");
     system("clear");
     if (option == 1)
     {
@@ -158,7 +177,7 @@ invalid:
     }
     else
     {
-        printf("Insert a valid operation!\n");
+        printf(RED "Insert a valid operation!\n" RESET);
         goto invalid;
     }
 }
@@ -171,29 +190,46 @@ void createNewAcc(struct User u)
     FILE *pf = fopen(RECORDS, "a+");
 
 noAccount:
+
     system("clear");
     printf("\t\t\t===== New record =====\n");
 
     printf("\nEnter today's date(mm/dd/yyyy):");
     scanf("%d/%d/%d", &r.deposit.month, &r.deposit.day, &r.deposit.year);
-    printf("\nEnter the account number:");
-    scanf("%d", &r.accountNbr);
+    r.accountNbr = readInt("\nEnter the account number:");
 
     fseek(pf, 0, SEEK_SET);
     while (getAccountFromFile(pf, userName, &cr))
     {
         if (strcmp(userName, u.name) == 0 && cr.accountNbr == r.accountNbr)
         {
-            printf("✖ This Account already exists for this user\n\n");
+            printf(RED "✖ This Account already exists for this user\n\n" RESET);
             goto noAccount;
         }
     }
-    printf("\nEnter the country:");
     while (getchar() != '\n');
+
+    do
+{
+    printf("Enter the country:");
     fgets(r.country, sizeof(r.country), stdin);
     r.country[strcspn(r.country, "\n")] = '\0';
+
+    if (strlen(r.country) == 0)
+        printf(RED "Country cannot be empty!\n" RESET);
+
+    } while (strlen(r.country) == 0);
+
+    do
+    {
     printf("\nEnter the phone number:");
-    scanf("%s", r.phone);
+    fgets(r.phone, sizeof(r.phone), stdin);
+    r.phone[strcspn(r.phone, "\n")] = '\0';
+
+    if (strlen(r.phone) == 0)
+        printf(RED "Phone number cannot be empty!\n" RESET);
+    } while (strlen(r.phone) == 0);
+
     printf("\nEnter amount to deposit: $");
     scanf("%lf", &r.amount);
     printf("\nChoose the type of account:\n\t-> savings\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
@@ -229,25 +265,38 @@ void checkAllAccounts(struct User u)
 
     system("clear");
     printf("\t\t====== All accounts from user, %s =====\n\n", u.name);
+    
+    struct Record allRecords[100];
+    int count = loadAllRecords(allRecords);
+    int userHasAccounts = 0;
+    for (int i =0; i < count; i++)
+    {
+        if (allRecords[i].userId == u.id)
+        {
+            userHasAccounts = 1;
+            break;
+        }
+    }
+    if (userHasAccounts)
+    {
+        printf(CYAN "%-6s%-10s%-10s%-13s%-17s%-12s%-12s\n" RESET,
+               "ID", "Acc.Num", "Type", "Balance", "Country", "Phone", "Deposit Date");
+        printf("----  --------  --------  -----------  ---------------  ----------- ------------\n");
+    }
+    
     while (getAccountFromFile(pf, userName, &r))
     {
         if (r.userId ==u.id)
         {
             found =1;
-            printf("_____________________\n");
-            printf("\nAccount number:%d\nDeposit Date:%d/%d/%d \ncountry:%s \nPhone number:%s \nAmount deposited: $%.2f \nType Of Account:%s\n",
-                   r.accountNbr,
-                   r.deposit.day,
-                   r.deposit.month,
-                   r.deposit.year,
-                   r.country,
-                   r.phone,
-                   r.amount,
-                   r.accountType);
+            char dateStr[15];
+            sprintf(dateStr, "%d/%d/%d", r.deposit.month, r.deposit.day, r.deposit.year);
+            printf("%-6d%-10d%-10s$%-12.2f%-17s%-12s%-12s\n",
+                   r.id, r.accountNbr, r.accountType, r.amount, r.country, r.phone, dateStr);
         }
     }
     if (!found)
-        printf("No accounts found!\n");
+        printf(RED "No accounts found!\n" RESET);
     fclose(pf);
     success(u);
 }
@@ -255,8 +304,11 @@ void checkAllAccounts(struct User u)
 void checkAccountDetails(struct User u)
 {
     int accountNbr;
-    printf("Enter account number: ");
-    scanf("%d", &accountNbr);
+
+    while(1)
+    {
+    system("clear");
+    accountNbr = readInt("Enter account number: ");
     system("clear");
    
     struct Record records[100];
@@ -291,16 +343,30 @@ void checkAccountDetails(struct User u)
                 records[i].amount * 0.08 * 3, records[i].deposit.day, records[i].deposit.month, records[i].deposit.year + 3);
         break;
         }   
-}
-    stayOrReturn(found, checkAccountDetails, u);
+    }
+    if (found)
+    {
+            stayOrReturn(found,  u);
+            return;
+        }
+        else
+        {
+            int result = stayOrReturn(found, u);
+            if (result == 0)
+            continue;
+        }
+    }
 }
 
 
 void updateAccount(struct User u)
-{
+{   
     int accountNbr;
-    printf("Enter account number: ");
-    scanf("%d", &accountNbr);
+
+    while (1)
+    {
+    system ("clear");
+    accountNbr = readInt("Enter account number: ");
     system ("clear");
 
     struct Record records[100];
@@ -314,25 +380,36 @@ void updateAccount(struct User u)
             found = 1;
             int choice;
         invalidChoice:
-            printf("Update (1) phone or (2) country? ");
-            scanf("%d", &choice);
-            while (getchar() != '\n');
+            choice = readInt("Update (1) phone or (2) country? ");
 
             if (choice ==1)
             {
-                printf("New phone: ");
-                fgets(records[i].phone, sizeof(records[i].phone), stdin);
-                records[i].phone[strcspn(records[i].phone, "\n")] = '\0';
+                do
+                {
+                    printf("New phone: ");
+                    fgets(records[i].phone, sizeof(records[i].phone), stdin);
+                    records[i].phone[strcspn(records[i].phone, "\n")] = '\0';
+
+                    if (strlen(records[i].phone) == 0)
+                        printf(RED "Phone number cannot be empty!\n" RESET);
+                } while (strlen(records[i].phone) == 0);
             }
             else if (choice ==2)
             {
-                printf("New country: ");
+                do
+                {
+                printf("Enter the country:");
                 fgets(records[i].country, sizeof(records[i].country), stdin);
                 records[i].country[strcspn(records[i].country, "\n")] = '\0';
+
+                if (strlen(records[i].country) == 0)
+                printf(RED "Country cannot be empty!\n" RESET);
+
+             } while (strlen(records[i].country) == 0);
             }
-            else
+             else
             {
-                printf("Insert a valid operation!\n");
+                printf(RED "Insert a valid operation!\n" RESET);
                 goto invalidChoice;
             }
 
@@ -340,14 +417,28 @@ void updateAccount(struct User u)
             break;
             }
         }
-    stayOrReturn(found, updateAccount, u);
+        if (found)
+        {
+            stayOrReturn(found,  u);
+            return;
+        }
+        else
+        {
+            int result = stayOrReturn(found, u);
+            if (result == 0)
+            continue;
+        }
     }
+}
 
 void makeTransaction(struct User u)
 {
     int accountNbr;
-    printf("Enter account number: ");
-    scanf("%d", &accountNbr);
+
+    while(1)
+    {
+    system("clear");
+    accountNbr = readInt("Enter account number: ");
     system("clear");
 
     struct Record records[100];
@@ -364,14 +455,13 @@ void makeTransaction(struct User u)
                 strcmp(records[i].accountType, "fixed02") == 0 ||
                 strcmp(records[i].accountType, "fixed03") == 0)
                 {
-                    printf("Transactions are not allowed for fixed accounts!\n");
+                    printf(RED "Transactions are not allowed for fixed accounts!\n" RESET);
                    break;
                 }
             int choice;
             int changed = 0;
         invalidChoice:
-            printf("Do you want to (1) deposit or (2) withdraw? ");
-            scanf("%d", &choice);
+            choice = readInt("Do you want to (1) deposit or (2) withdraw? ");
 
             if (choice == 1)
             {
@@ -381,13 +471,13 @@ void makeTransaction(struct User u)
                
                 if (depositAmount <= 0)
                 {
-                    printf("Amount must be positive!\n");
+                    printf(RED "Amount must be positive!\n" RESET);
                     goto invalidChoice;
                 }
             
                 records[i].amount += depositAmount;
                 changed = 1;
-                printf("Deposited $%.2f successfully!\n", depositAmount);
+                printf(GREEN "Deposited $%.2f successfully!\n" RESET, depositAmount);
 
             }
             else if (choice == 2)
@@ -398,22 +488,22 @@ void makeTransaction(struct User u)
                 
                 if (withdrawAmount <= 0)
                 {
-                    printf("Amount must be positive!\n");
+                    printf(RED "Amount must be positive!\n" RESET);
                     goto invalidChoice;
                 }
 
                 if (withdrawAmount > records[i].amount + 0.001)
                 {
-                    printf("Insufficient funds! Current balance: $%.2f\n", records[i].amount);
+                    printf(RED "Insufficient funds! Current balance: $%.2f\n" RESET, records[i].amount);
                     goto invalidChoice;
                 }
                 records[i].amount -= withdrawAmount;
                 changed = 1;
-                printf("Withdrew $%.2f successfully!\n", withdrawAmount);
+                printf(GREEN "Withdrew $%.2f successfully!\n" RESET, withdrawAmount);
             }
             else
             {
-                printf("Insert a valid operation!\n");
+                printf(RED "Insert a valid operation!\n" RESET);
                 goto invalidChoice;
             }
         if (changed)
@@ -423,14 +513,28 @@ void makeTransaction(struct User u)
             break;
         }
     }
-    stayOrReturn(found, makeTransaction, u);
+        if (found)
+        {
+            stayOrReturn(found,  u);
+            return;
+        }
+        else
+        {
+            int result = stayOrReturn(found, u);
+            if (result == 0)
+            continue;
+        }
+    }
 }
 
 void removeAccount(struct User u)
 {
     int accountNbr;
-    printf("Enter account number: ");
-    scanf("%d", &accountNbr);
+
+    while(1)
+    {
+    system("clear");
+    accountNbr = readInt("Enter account number: ");
     system("clear");
 
     struct Record records[100];
@@ -444,8 +548,7 @@ void removeAccount(struct User u)
             found = 1;
             int choice;
         invalidChoise:
-            printf("Are you sure you want to delete this account? (1) Yes (2) No: ");
-            scanf("%d", &choice);
+            choice = readInt("Are you sure you want to delete this account? (1) Yes (2) No: ");
 
             if (choice == 1)
             {           
@@ -455,28 +558,41 @@ void removeAccount(struct User u)
             }
             count--;
             saveAllRecords(records, count);
-            printf("Account removed successfully!\n");
+            printf(GREEN "Account removed successfully!\n" RESET);
         }
         else if (choice == 2)
         {
-            printf("Account removal canceled.\n");
+            printf(CYAN "Account removal canceled.\n" RESET);
         }
         else
         {
-            printf("Insert a valid operation!\n");
+            printf(RED "Insert a valid operation!\n" RESET);
                 goto invalidChoise;
         }
             break;
         }
     }
-    stayOrReturn(found, removeAccount, u);
-}   
+    if (found)
+    {
+    stayOrReturn(found,  u);
+    return;
+    }
+    else
+    {
+        int result = stayOrReturn(found, u);
+        if (result == 0)
+        continue;
+       } 
+    }
+} 
 
 void transferOwnership (struct User u)
 {
+    while(1)
+    {
     int accountNbr;
-    printf("Enter account number: ");
-    scanf("%d", &accountNbr);
+    system("clear");
+    accountNbr = readInt("Enter account number: ");
     system("clear");
 
     struct Record records[100];
@@ -490,14 +606,13 @@ void transferOwnership (struct User u)
             found = 1;
             char newOwnerName[50];
             printf("Enter the name of the new owner: ");
-            while (getchar() != '\n');
             fgets(newOwnerName, sizeof(newOwnerName), stdin);
             newOwnerName[strcspn(newOwnerName, "\n")] = '\0';
 
             // Self-transfer check
             if (strcmp(newOwnerName, u.name) == 0)
             {
-                printf("😊 This account is already yours — no need to transfer it to yourself!\n");
+                printf(CYAN "😊 This account is already yours — no need to transfer it to yourself!\n" RESET);
                 break;
             }
             //Lookup the new owner using the exixting loadAllUsers()
@@ -515,34 +630,44 @@ void transferOwnership (struct User u)
             }
             if (ownerIndex == -1)
             {
-                printf("✖ No user found with the username \"%s\"!\n", newOwnerName);
+                printf(RED "✖ No user found with the username \"%s\"!\n" RESET, newOwnerName);
                 break;
             }
 
             int choice;
-        invalidChoice:
-            printf("Are you sure you want to transfer this account to %s? (1) Yes (2) No: ", newOwnerName);
-            scanf("%d", &choice);
-
+            invalidChoice:
+            char promptMsg[150];
+            sprintf(promptMsg, "Are you sure you want to transfer this account to %s? (1) Yes (2) No: ", newOwnerName);
+            choice = readInt(promptMsg);
             if (choice == 1)
             {
                 records[i].userId = allUsers[ownerIndex].id;
                 strcpy(records[i].name, allUsers[ownerIndex].name);
                 saveAllRecords(records, count);
-                 printf("✔ Ownership of account #%d transferred to %s!\n", accountNbr, allUsers[ownerIndex].name);
+                 printf(GREEN "✔ Ownership of account #%d transferred to %s!\n" RESET, accountNbr, allUsers[ownerIndex].name);
             }
             else if (choice ==2)
             {
-                printf("Transfer cancelled - nothing was changed.\n");
+                printf(CYAN "Transfer cancelled - nothing was changed.\n" RESET);
             }
             else
             {
-                printf("Insert a valid operation!\n");
+                printf(RED "Insert a valid operation!\n" RESET);
                 goto invalidChoice;
             }
             break;
         }
-
     }
-    stayOrReturn(found, transferOwnership, u);
+    if (found)
+    {
+     stayOrReturn(found,  u);
+     return;
+    }
+    else
+    {
+        int result = stayOrReturn(found, u);
+        if (result == 0)
+        continue;
+    }
+    }
 }

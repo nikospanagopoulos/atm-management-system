@@ -229,7 +229,7 @@ int registerUser (struct User *u)
     int count = loadAllUsers(users);
     for (int i = 0; i < count; i++)    {
         if (strcmp(users[i].name, u->name) == 0)
-        {            printf("Username already exists\n");
+        {            printf(RED "Username already exists\n" RESET);
             return 0;
         }
     }         
