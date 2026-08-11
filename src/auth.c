@@ -1,7 +1,8 @@
 #include <termios.h>
 #include "header.h"
- #include <unistd.h>
- 
+#include <unistd.h>
+
+
 char *USERS = "./data/users.txt";
 
 void loginMenu(char a[50], char pass[50])
@@ -129,6 +130,75 @@ int lockUser(char *name)
     return 1;
 }
 
+void bytesToHex(const unsigned char *bytes, int len, char *output){
+    for (int i = 0; i < len; i++) {
+        sprintf(output + i*2, "%02x", bytes[i]);
+    }
+    output[len*2] = '\0';
+}
+
+void generateSalt(char *output_hex){
+    unsigned char raw_salt[16];
+
+    if (RAND_bytes(raw_salt, 16) != 1) {
+        printf(RED "Critical error: unable to generate secure random salt.\n" RESET);
+        exit(1);
+    }
+        bytesToHex(raw_salt, 16, output_hex);
+}
+
+void sha256Hash(const char *input, char *output_hex){
+    unsigned char raw_hash[32];
+    unsigned int actual_len;
+    EVP_MD_CTX *CTX = EVP_MD_CTX_new();
+        if (CTX == NULL) {
+        printf(RED "Critical error: unable to create hash context.\n" RESET);
+        exit(1);
+    }
+    if (EVP_DigestInit_ex(CTX, EVP_sha256(), NULL) != 1) {
+        printf(RED "Critical error: unable to initialize hash context.\n" RESET);
+        exit(1);
+    }
+    if (EVP_DigestUpdate(CTX, input, strlen(input)) != 1) {
+        printf(RED "Critical error: unable to update hash context.\n" RESET);
+        exit(1);
+    }
+    if (EVP_DigestFinal_ex(CTX, raw_hash, &actual_len) != 1) {
+        printf(RED "Critical error: unable to finalize hash.\n" RESET);
+        exit(1);
+    }
+    EVP_MD_CTX_free(CTX);
+    bytesToHex(raw_hash, actual_len, output_hex);
+}
+
+void hashPassword(const char *password, char *output) {
+    char salt_hex[33];
+    char combined[COMBINED_BUFFER_SIZE];
+    char hash_hex[65];
+    generateSalt(salt_hex);
+        strcpy(combined, salt_hex);
+        strcat(combined, password);
+
+        sha256Hash(combined, hash_hex);
+        strcpy(output, salt_hex);
+        strcat(output, ":");
+        strcat(output, hash_hex);
+}
+
+int verifyPassword(const char *password, const char *stored) {
+    char salt_hex[33];
+    char stored_hash_hex[65];
+    char combined[COMBINED_BUFFER_SIZE];
+    char computed_hash_hex[65];
+
+    sscanf(stored, "%32[^:]:%64s", salt_hex, stored_hash_hex);
+    strcpy(combined, salt_hex);
+    strcat(combined, password);
+
+    sha256Hash(combined, computed_hash_hex);
+    return (strcmp(computed_hash_hex, stored_hash_hex) == 0);
+}
+
 int loginUser(struct User *u)
 {
 
@@ -244,7 +314,6 @@ int registerUser (struct User *u)
     fclose(fp);
     return 1;
 }   
-
 
 
 

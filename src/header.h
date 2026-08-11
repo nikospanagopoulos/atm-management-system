@@ -6,9 +6,12 @@
 #define BLUE "\033[1;34m"
 #define CYAN "\033[1;36m"
 #define RESET "\033[0m"
+#define COMBINED_BUFFER_SIZE 100
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <openssl/evp.h>
+#include <openssl/rand.h>
 
 struct Date
 {
@@ -45,42 +48,86 @@ struct User
  * Fills the given buffers directly (legacy helper, superseded by loginUser).
  */
 void loginMenu(char a[50], char pass[50]);
+
 /**
  * Looks up the stored password for the given user by scanning users.txt.
  * Returns "no user found" if no matching username exists.
  */
 const char *getPassword(struct User u);
+
 /**
  * Loads every user from users.txt into the given array.
  * Returns the number of users loaded.
  */
 int loadAllUsers (struct User *out);
+
 /**
  * Checks whether the whole system is locked (system_locked.txt exists).
  * Returns 1 if locked, 0 otherwise.
  */
 int isSystemLocked(void);
+
 /**
  * Checks whether a specific username is locked (present in locked_users.txt).
  * Returns 1 if locked, 0 otherwise.
  */
 int isUserLocked(char *name);
+
 /**
  * Creates system_locked.txt, locking the whole system after too many
  * failed username attempts.
  */
 int lockSystem(void);
+
 /**
  * Appends the given username to locked_users.txt, locking that account
  * after too many failed password attempts.
  */
 int lockUser(char *name);
+
+/**
+ * Converts raw bytes into a lowercase hex string.
+ * @param bytes   the raw byte array to convert
+ * @param len     number of bytes in the array
+ * @param output  destination buffer, must be at least (len*2 + 1) chars
+ */
+void bytesToHex(const unsigned char *bytes, int len, char *output);
+
+/**
+ * Generates a cryptographically secure random salt, hex-encoded.
+ * @param output_hex  destination buffer, must be at least 33 chars (16*2 + 1)
+ */
+void generateSalt(char *output_hex);
+
+/**
+ * Computes the SHA-256 hash of a string, hex-encoded.
+ * @param input       the string to hash (e.g. salt+password concatenated)
+ * @param output_hex  destination buffer, must be at least 65 chars (32*2 + 1)
+ */
+void sha256Hash(const char *input, char *output_hex);
+
+/**
+ * Hashes a password with a fresh random salt, producing "salt:hash" in hex.
+ * @param password  the plaintext password to hash
+ * @param output    destination buffer, must be at least 100 chars (see COMBINED_BUFFER_SIZE)
+ */
+void hashPassword(const char *password, char *output);
+
+/**
+ * Verifies a plaintext password against a stored hash.
+ * @param password  the plaintext password to verify
+ * @param stored    the stored hash (salt:hash)
+ * @return  1 if the password is correct, 0 otherwise
+ */
+int verifyPassword(const char *password, const char *stored);
+
 /**
  * Handles the full login flow: username lookup (2 attempts), lock check,
  * and password verification (3 attempts, hidden input).
  * Fills the User struct on success. Returns 1 on success, 0 on failure.
  */
 int loginUser(struct User *u);
+
 /**
  * Handles registration: prompts for username/password, checks for duplicates,
  * and appends the new user to users.txt. Returns 1 on success, 0 if username taken.
@@ -95,67 +142,81 @@ int registerUser(struct User *u);
  * Returns 1 on success, 0 on parse failure or end of file.
  */
 int getAccountFromFile(FILE *ptr, char name[50], struct Record *r);
+
 /**
  * Appends a single record to an already-open file stream, in
  * pipe-delimited format.
  */
 void saveAccountToFile(FILE *ptr, struct User u, struct Record r);
+
 /**
  * Creates a new account/record for the logged-in user, preventing duplicate
  * account numbers for the same user. Assigns a globally unique record id.
  */
 void createNewAcc(struct User u);
+
 /**
  * Loads every record from records.txt into the given array.
  * Returns the number of records loaded.
  */
 int loadAllRecords(struct Record *out);
+
 /**
  * Overwrites records.txt with the given array of records.
  */
 void saveAllRecords(struct Record *records, int count);
+
 /**
  * Displays the main menu loop and dispatches to the selected feature.
  */
 void mainMenu(struct User u);
+
 /**
  * Displays full details and interest projection for a single account
  * belonging to the logged-in user.
  */
 void checkAccountDetails(struct User u);
+
 /**
  * Lists every account belonging to the logged-in user.
  */
 void checkAllAccounts(struct User u);
+
 /**
  * Lets the logged-in user update the phone or country of one of their accounts.
  */
 void updateAccount(struct User u);
+
 /**
  * Handles deposit/withdraw for one account. Blocks fixed-type accounts
  * and withdrawals exceeding the current balance.
  */
 void makeTransaction(struct User u);
+
 /**
  * Deletes one account belonging to the logged-in user, after confirmation.
  */
 void removeAccount(struct User u);
+
 /**
  * Transfers ownership of one account to another existing user, after
  * confirmation. Blocks self-transfers and unknown usernames.
 */
  void transferOwnership(struct User u);
+
  /**
  * Shared post-action prompt used by every feature function. If notGood is 0
  * (record not found), offers retry/main-menu/exit. Otherwise offers
  * main-menu/exit only. Calls f(u) to retry the same feature if requested.
  */
 int stayOrReturn(int notGood, struct User u);
+
 /**
  * Reads an integer from stdin, reprompting on invalid (non-numeric) input.
  * Always clears the input buffer up to the next newline.
  */
 int readInt(const char *prompt);
+
 /**
  * Shared success prompt shown after createNewAcc/checkAllAccounts complete.
  * Offers main-menu/exit.

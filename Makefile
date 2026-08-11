@@ -4,7 +4,7 @@ CFLAGS = -Wall -Wextra -g
 objects = src/main.o src/system.o src/auth.o
 
 atm: $(objects)
-	$(CC) -o atm $(objects)
+	$(CC) -o atm $(objects) -lcrypto
 
 %.o: %.c src/header.h
 	$(CC) $(CFLAGS) -c $< -o $@
