@@ -199,6 +199,41 @@ int verifyPassword(const char *password, const char *stored) {
     return (strcmp(computed_hash_hex, stored_hash_hex) == 0);
 }
 
+
+int migration(const char *stored, const char *newFile) {
+    FILE *old_fp = fopen(stored, "r");
+    if (old_fp == NULL) {
+        printf(RED "Error! opening old file: %s\n" RESET, stored);
+        return 0;
+    }
+
+    FILE *new_fp = fopen(newFile, "w");
+    if (new_fp == NULL) {
+        printf(RED "Error! opening new file: %s\n" RESET, newFile);
+        fclose(old_fp);
+        return 0;
+    }
+    struct User user;
+    while (fscanf(old_fp, "%d %49s %99s", &user.id, user.name, user.password) != EOF) {
+        char hashed[COMBINED_BUFFER_SIZE];
+        if (strchr(user.password, ':') != NULL) {
+            fprintf(new_fp, "%d %s %s\n", user.id, user.name, user.password);
+            continue;
+        }
+        hashPassword(user.password, hashed);
+        fprintf(new_fp, "%d %s %s\n", user.id, user.name, hashed);
+    }
+
+    fclose(old_fp);
+    fclose(new_fp);
+    int result = rename(newFile, stored);
+    if (result != 0) {
+        printf(RED "Error! renaming new file to old file: %s\n" RESET, stored);
+        return 0;
+    }
+    return 1;
+}
+
 int loginUser(struct User *u)
 {
 
@@ -272,7 +307,7 @@ printf("Enter password: ");
 
     for (int i = 0; i< count; i++)
     {
-        if (strcmp(users[i].name, u->name) ==0 && strcmp(users[i].password, u->password) == 0)
+        if (strcmp(users[i].name, u->name) ==0 && verifyPassword(u->password, users[i].password) == 1)
     {
         u->id = users[i].id;
         return 1;
@@ -294,14 +329,21 @@ int registerUser (struct User *u)
    printf("Enter username: ");
     scanf("%s", u->name);
     printf("Enter password: ");
-    scanf("%s", u->password);
+    scanf("%99s", u->password);
     struct User users[100];
     int count = loadAllUsers(users);
+    while (strlen(u->password) > MAX_PASSWORD_LEN)
+        {
+            printf(RED "Password too long! Max length is %d characters.\n" RESET, MAX_PASSWORD_LEN);
+            printf("Enter password: ");
+            scanf("%99s", u->password);
+        }
     for (int i = 0; i < count; i++)    {
         if (strcmp(users[i].name, u->name) == 0)
         {            printf(RED "Username already exists\n" RESET);
             return 0;
         }
+        
     }         
    u->id = count;
     FILE *fp = fopen("./data/users.txt", "a");
@@ -310,7 +352,10 @@ int registerUser (struct User *u)
         printf("Error! opening file");
         exit(1);
     }
-    fprintf(fp, "%d %s %s\n", u->id, u->name, u->password);
+    char hashed[COMBINED_BUFFER_SIZE];
+    hashPassword(u->password, hashed);
+   
+    fprintf(fp, "%d %s %s\n", u->id, u->name, hashed);
     fclose(fp);
     return 1;
 }   

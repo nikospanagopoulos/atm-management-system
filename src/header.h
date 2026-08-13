@@ -7,6 +7,8 @@
 #define CYAN "\033[1;36m"
 #define RESET "\033[0m"
 #define COMBINED_BUFFER_SIZE 100
+#define SALT_HEX_LEN 32
+#define MAX_PASSWORD_LEN (COMBINED_BUFFER_SIZE - SALT_HEX_LEN - 1)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,11 +39,18 @@ struct User
 {
     int id;
     char name[50];
-    char password[50];
+    char password[COMBINED_BUFFER_SIZE];
 
 };
 
 // authentication functions
+
+/**
+ * Migrates an old plaintext password file to the new salted hash format.
+ * Reads from 'stored' and writes to 'newFile', then renames newFile to stored.
+ * Returns 1 on success, 0 on failure.
+ */
+int migration(const char *stored, const char *newFile);
 
 /**
  * Prompts for username and password with terminal echo disabled for the password.

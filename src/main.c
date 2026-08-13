@@ -4,6 +4,7 @@
 void mainMenu(struct User u)
 {
     int option;
+
     do
     {
     system("clear");
@@ -107,7 +108,7 @@ void initMenu(struct User *u)
 int main()
 {
     struct User u;
-    
+        migration("./data/users.txt", "./data/users_new.txt");
     initMenu(&u);
     mainMenu(u);
     return 0;
