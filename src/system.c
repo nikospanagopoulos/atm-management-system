@@ -49,7 +49,7 @@ void saveAccountToFile(FILE *ptr, struct User u, struct Record r)
             r.accountType);
 }
 
-int loadAllRecords(struct Record *out)
+int loadAllRecordsFromTxt(struct Record *out)
 {
     FILE *ptr = fopen(RECORDS, "r");
     if (ptr == NULL)
@@ -236,7 +236,7 @@ noAccount:
     scanf("%s", r.accountType);
 
     struct Record allRecords[100];
-    int count = loadAllRecords(allRecords);
+    int count = loadAllRecordsFromTxt(allRecords);
     int maxExistingId = -1;
     for (int i = 0; i <count; i++)
     {
@@ -267,7 +267,7 @@ void checkAllAccounts(struct User u)
     printf("\t\t====== All accounts from user, %s =====\n\n", u.name);
     
     struct Record allRecords[100];
-    int count = loadAllRecords(allRecords);
+    int count = loadAllRecordsFromTxt(allRecords);
     int userHasAccounts = 0;
     for (int i =0; i < count; i++)
     {
@@ -312,7 +312,7 @@ void checkAccountDetails(struct User u)
     system("clear");
    
     struct Record records[100];
-    int count = loadAllRecords(records);
+    int count = loadAllRecordsFromTxt(records);
     int found = 0;
 
    for (int i = 0; i < count; i++)
@@ -370,7 +370,7 @@ void updateAccount(struct User u)
     system ("clear");
 
     struct Record records[100];
-    int count = loadAllRecords(records);
+    int count = loadAllRecordsFromTxt(records);
     int found = 0;
 
     for (int i =0; i < count; i++)
@@ -442,7 +442,7 @@ void makeTransaction(struct User u)
     system("clear");
 
     struct Record records[100];
-    int count = loadAllRecords(records);
+    int count = loadAllRecordsFromTxt(records);
     int found = 0;
 
     for (int i = 0; i < count; i++)
@@ -538,7 +538,7 @@ void removeAccount(struct User u)
     system("clear");
 
     struct Record records[100];
-    int count = loadAllRecords(records);
+    int count = loadAllRecordsFromTxt(records);
     int found = 0;
 
     for (int i = 0; i < count; i++)
@@ -596,7 +596,7 @@ void transferOwnership (struct User u)
     system("clear");
 
     struct Record records[100];
-    int count = loadAllRecords(records);
+    int count = loadAllRecordsFromTxt(records);
     int found = 0;
 
     for (int i = 0; i < count; i++)

@@ -107,9 +107,16 @@ void initMenu(struct User *u)
 
 int main()
 {
+    if (!initDatabase())
+    {
+        fprintf(stderr, "Failed to initialize database. Exiting.\n");
+        exit(1);
+    }
+
+    migration("./data/users.txt", "./data/users_new.txt");
     struct User u;
-        migration("./data/users.txt", "./data/users_new.txt");
     initMenu(&u);
     mainMenu(u);
+    sqlite3_close(db);
     return 0;
 }

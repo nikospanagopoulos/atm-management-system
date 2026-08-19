@@ -14,6 +14,8 @@
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include <sqlite3.h>
+extern sqlite3 *db; // Declare the global database pointer
 
 struct Date
 {
@@ -45,6 +47,9 @@ struct User
 
 // authentication functions
 
+
+int initDatabase(void);
+int loadAllRecords(struct Record records[]);
 /**
  * Migrates an old plaintext password file to the new salted hash format.
  * Reads from 'stored' and writes to 'newFile', then renames newFile to stored.
