@@ -47,9 +47,58 @@ struct User
 
 // authentication functions
 
-
+/**
+ * Opens (or creates) the SQLite database file at data/atm.db and
+ * creates the 'users' and 'records' tables if they don't already exist.
+ * Must be called once at program startup, before any login/register.
+ * Returns 1 on success, 0 on failure.
+ */
 int initDatabase(void);
+/**
+ * Loads all records from the SQLite 'records' table into the given array.
+ * Returns the number of records loaded.
+ */
 int loadAllRecords(struct Record records[]);
+/**
+ * Loads all users from the SQLite 'users' table into the given array.
+ * Returns the number of users loaded.
+ */
+int loadAllUsers(struct User users[]);
+/**
+ * Inserts a new user into the SQLite 'users' table.
+ * The caller is responsible for setting a unique user->id beforehand.
+ * Returns 1 on success, 0 on failure.
+ */
+int insertUser(struct User *user);
+/**
+ * Updates an existing user's name and password in the SQLite 'users' table,
+ * matched by user->id.
+ * Returns 1 on success, 0 on failure.
+ */
+int updateUser(struct User *user);
+/**
+ * Inserts a new record into the SQLite 'records' table.
+ * The caller is responsible for setting a unique record->id beforehand.
+ * Returns 1 on success, 0 on failure.
+ */
+int insertRecord(struct Record *record);
+/**
+ * Updates an existing record's fields in the SQLite 'records' table,
+ * matched by record->id.
+ * Returns 1 on success, 0 on failure.
+ */
+int updateRecord(struct Record *record);
+/**
+ * Deletes the user with the given id from the SQLite 'users' table.
+ * Returns 1 on success, 0 on failure.
+ */
+int deleteUser(int id);
+
+/**
+ * Deletes the record with the given id from the SQLite 'records' table.
+ * Returns 1 on success, 0 on failure.
+ */
+int deleteRecord(int id);
 /**
  * Migrates an old plaintext password file to the new salted hash format.
  * Reads from 'stored' and writes to 'newFile', then renames newFile to stored.
@@ -73,7 +122,7 @@ const char *getPassword(struct User u);
  * Loads every user from users.txt into the given array.
  * Returns the number of users loaded.
  */
-int loadAllUsers (struct User *out);
+int loadAllUsersFromTxt (struct User *out);
 
 /**
  * Checks whether the whole system is locked (system_locked.txt exists).
@@ -173,7 +222,7 @@ void createNewAcc(struct User u);
  * Loads every record from records.txt into the given array.
  * Returns the number of records loaded.
  */
-int loadAllRecords(struct Record *out);
+int loadAllRecordsFromTxt(struct Record *out);
 
 /**
  * Overwrites records.txt with the given array of records.

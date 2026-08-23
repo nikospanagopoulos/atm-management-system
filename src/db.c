@@ -95,3 +95,224 @@ int loadAllRecords(struct Record records[])
     sqlite3_finalize(stmt);
     return index;
 }
+
+int insertRecord(struct Record *record)
+{
+    const char *sql =
+        "INSERT INTO records (id, user_id, name, account_nbr, "
+        "deposit_month, deposit_day, deposit_year, "
+        "country, phone, amount, account_type) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    sqlite3_bind_int(stmt, 1, record->id);
+    sqlite3_bind_int(stmt, 2, record->userId);
+    sqlite3_bind_text(stmt, 3, record->name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, record->accountNbr);
+    sqlite3_bind_int(stmt, 5, record->deposit.month);
+    sqlite3_bind_int(stmt, 6, record->deposit.day);
+    sqlite3_bind_int(stmt, 7, record->deposit.year);
+    sqlite3_bind_text(stmt, 8, record->country, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 9, record->phone, -1, SQLITE_STATIC);
+    sqlite3_bind_double(stmt, 10, record->amount);
+    sqlite3_bind_text(stmt, 11, record->accountType, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE)
+    {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return 1;
+}
+
+int updateRecord(struct Record *record)
+{
+    const char *sql =
+        "UPDATE records SET "
+        "user_id = ?, name = ?, account_nbr = ?, "
+        "deposit_month = ?, deposit_day = ?, deposit_year = ?, "
+        "country = ?, phone = ?, amount = ?, account_type = ? "
+        "WHERE id = ?";
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    sqlite3_bind_int(stmt, 1, record->userId);
+    sqlite3_bind_text(stmt, 2, record->name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, record->accountNbr);
+    sqlite3_bind_int(stmt, 4, record->deposit.month);
+    sqlite3_bind_int(stmt, 5, record->deposit.day);
+    sqlite3_bind_int(stmt, 6, record->deposit.year);
+    sqlite3_bind_text(stmt, 7, record->country, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 8, record->phone, -1, SQLITE_STATIC);
+    sqlite3_bind_double(stmt, 9, record->amount);
+    sqlite3_bind_text(stmt, 10, record->accountType, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 11, record->id);
+
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE)
+    {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return 1;
+}
+
+int deleteRecord(int id)
+{
+    const char *sql = "DELETE FROM records WHERE id = ?";
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    sqlite3_bind_int(stmt, 1, id);
+
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE)
+    {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return 1;
+}
+
+int loadAllUsers(struct User users[])
+{
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT id, name, password FROM users";
+
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    int index = 0;
+    while (index < 100 && sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        users[index].id = sqlite3_column_int(stmt, 0);
+
+        const unsigned char *nameText = sqlite3_column_text(stmt, 1);
+        strncpy(users[index].name, (const char *)nameText, sizeof(users[index].name) - 1);
+        users[index].name[sizeof(users[index].name) - 1] = '\0';
+
+        const unsigned char *passwordText = sqlite3_column_text(stmt, 2);
+        strncpy(users[index].password, (const char *)passwordText, sizeof(users[index].password) - 1);
+        users[index].password[sizeof(users[index].password) - 1] = '\0';
+
+        index++;
+    }
+
+    sqlite3_finalize(stmt);
+    return index;
+}
+
+int insertUser(struct User *user)
+{
+    const char *sql = "INSERT INTO users (id, name, password) VALUES (?, ?, ?)";
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    sqlite3_bind_int(stmt, 1, user->id);
+    sqlite3_bind_text(stmt, 2, user->name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, user->password, -1, SQLITE_STATIC);
+
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE)
+    {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return 1;
+}
+
+int updateUser(struct User *user)
+{
+    const char *sql = "UPDATE users SET name = ?, password = ? WHERE id = ?";
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    sqlite3_bind_text(stmt, 1, user->name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, user->password, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, user->id);
+
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE)
+    {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return 1;
+}
+
+int deleteUser(int id)
+{
+    const char *sql = "DELETE FROM users WHERE id = ?";
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (rc != SQLITE_OK)
+    {
+        fprintf(stderr, "Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+
+    sqlite3_bind_int(stmt, 1, id);
+
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE)
+    {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+
+    sqlite3_finalize(stmt);
+    return 1;
+}

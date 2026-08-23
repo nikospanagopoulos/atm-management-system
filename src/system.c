@@ -617,7 +617,7 @@ void transferOwnership (struct User u)
             }
             //Lookup the new owner using the exixting loadAllUsers()
             struct User allUsers[100];
-            int userCount = loadAllUsers(allUsers);
+            int userCount = loadAllUsersFromTxt(allUsers);
             int ownerIndex = -1;
 
             for (int j = 0; j< userCount; j++)

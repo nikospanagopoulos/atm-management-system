@@ -59,7 +59,7 @@ const char *getPassword(struct User u)
     fclose(fp);
     return "no user found";
 }
-int loadAllUsers (struct User *out)
+int loadAllUsersFromTxt (struct User *out)
 {
     FILE *fp = fopen("./data/users.txt", "r");
     if (fp == NULL)
@@ -244,7 +244,7 @@ if (isSystemLocked())
 }
  // username loop
     struct User users[100];
-    int count = loadAllUsers(users);
+    int count = loadAllUsersFromTxt(users);
     int found = 0;
     int username_attempts = 0;
 
@@ -331,7 +331,7 @@ int registerUser (struct User *u)
     printf("Enter password: ");
     scanf("%99s", u->password);
     struct User users[100];
-    int count = loadAllUsers(users);
+    int count = loadAllUsersFromTxt(users);
     while (strlen(u->password) > MAX_PASSWORD_LEN)
         {
             printf(RED "Password too long! Max length is %d characters.\n" RESET, MAX_PASSWORD_LEN);
@@ -345,16 +345,32 @@ int registerUser (struct User *u)
         }
         
     }         
-   u->id = count;
+   int maxId = -1;
+    for (int i = 0; i < count; i++)
+    {
+        if (users[i].id > maxId)
+        {
+            maxId = users[i].id;
+        }
+    }
+    u->id = maxId + 1;
+
+    char hashed[COMBINED_BUFFER_SIZE];
+    hashPassword(u->password, hashed);
+    strcpy(u->password, hashed);
+
+    if(!insertUser(u))
+    {
+        printf(RED "Error saving user to database!\n" RESET);
+        return 0;
+    }
+
     FILE *fp = fopen("./data/users.txt", "a");
     if (fp == NULL)
     {
         printf("Error! opening file");
         exit(1);
     }
-    char hashed[COMBINED_BUFFER_SIZE];
-    hashPassword(u->password, hashed);
-   
     fprintf(fp, "%d %s %s\n", u->id, u->name, hashed);
     fclose(fp);
     return 1;
