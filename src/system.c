@@ -235,6 +235,15 @@ noAccount:
     printf("\nChoose the type of account:\n\t-> savings\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
     scanf("%s", r.accountType);
 
+    while (strcmp(r.accountType, "savings") != 0 && strcmp(r.accountType, "current") != 0 &&
+           strcmp(r.accountType, "fixed01") != 0 && strcmp(r.accountType, "fixed02") != 0 &&
+           strcmp(r.accountType, "fixed03") != 0)
+    {
+        printf(RED "✖ Invalid account type! Please choose from the given options.\n" RESET);
+        printf("\nChoose the type of account:\n\t-> savings\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
+        scanf("%s", r.accountType);
+    }
+
     struct Record allRecords[100];
     int count = loadAllRecordsFromTxt(allRecords);
     int maxExistingId = -1;
@@ -248,6 +257,14 @@ noAccount:
     }
     r.id = maxExistingId + 1;
     r.userId = u.id;
+    strcpy(r.name, u.name);
+
+    if(!insertRecord(&r))
+    {
+        printf(RED "Error saving record to database!\n" RESET);
+        fclose(pf);
+        return;
+    }
 
     saveAccountToFile(pf, u, r);
 
@@ -391,8 +408,15 @@ void updateAccount(struct User u)
                     records[i].phone[strcspn(records[i].phone, "\n")] = '\0';
 
                     if (strlen(records[i].phone) == 0)
+                    {
                         printf(RED "Phone number cannot be empty!\n" RESET);
-                } while (strlen(records[i].phone) == 0);
+                    }
+                    } while (strlen(records[i].phone) == 0);
+                    if (!updateRecord(&records[i]))
+                    {
+                        printf(RED "Error updating record in database!\n" RESET);
+                    return;
+                    }
             }
             else if (choice ==2)
             {
@@ -403,16 +427,22 @@ void updateAccount(struct User u)
                 records[i].country[strcspn(records[i].country, "\n")] = '\0';
 
                 if (strlen(records[i].country) == 0)
-                printf(RED "Country cannot be empty!\n" RESET);
-
+                {
+                    printf(RED "Country cannot be empty!\n" RESET);
+                }
              } while (strlen(records[i].country) == 0);
+              if (!updateRecord(&records[i]))
+                    {
+                        printf(RED "Error updating record in database!\n" RESET);
+                    return;
+                    }
             }
              else
             {
                 printf(RED "Insert a valid operation!\n" RESET);
                 goto invalidChoice;
             }
-
+             
             saveAllRecords(records, count);
             break;
             }
@@ -508,6 +538,11 @@ void makeTransaction(struct User u)
             }
         if (changed)
         {
+             if (!updateRecord(&records[i]))
+                    {
+                        printf(RED "Error updating record in database!\n" RESET);
+                    return;
+                    }
             saveAllRecords(records, count);
         }
             break;
@@ -643,6 +678,12 @@ void transferOwnership (struct User u)
             {
                 records[i].userId = allUsers[ownerIndex].id;
                 strcpy(records[i].name, allUsers[ownerIndex].name);
+                if (!updateRecord(&records[i]))
+                    {
+                        printf(RED "Error updating record in database!\n" RESET);
+                    return;
+                    }
+
                 saveAllRecords(records, count);
                  printf(GREEN "✔ Ownership of account #%d transferred to %s!\n" RESET, accountNbr, allUsers[ownerIndex].name);
             }
