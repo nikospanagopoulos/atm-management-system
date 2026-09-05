@@ -99,6 +99,22 @@ int deleteUser(int id);
  * Returns 1 on success, 0 on failure.
  */
 int deleteRecord(int id);
+
+/**
+ * One-time migration: copies any users that exist in users.txt but not yet
+ * in the SQLite 'users' table into the database. Safe to call on every
+ * program startup (idempotent — skips users whose id already exists in db).
+ */
+void migrateUsersToDb(void);
+
+/**
+ * One-time migration: copies any records that exist in records.txt but not
+ * yet in the SQLite 'records' table into the database. Safe to call on
+ * every program startup (idempotent — skips records whose id already
+ * exists in db).
+ */
+void migrateRecordsToDb(void);
+
 /**
  * Migrates an old plaintext password file to the new salted hash format.
  * Reads from 'stored' and writes to 'newFile', then renames newFile to stored.

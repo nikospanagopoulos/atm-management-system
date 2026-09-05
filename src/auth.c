@@ -244,7 +244,7 @@ if (isSystemLocked())
 }
  // username loop
     struct User users[100];
-    int count = loadAllUsersFromTxt(users);
+    int count = loadAllUsers(users);
     int found = 0;
     int username_attempts = 0;
 

@@ -112,7 +112,8 @@ int main()
         fprintf(stderr, "Failed to initialize database. Exiting.\n");
         exit(1);
     }
-
+    migrateUsersToDb();
+    migrateRecordsToDb();
     migration("./data/users.txt", "./data/users_new.txt");
     struct User u;
     initMenu(&u);

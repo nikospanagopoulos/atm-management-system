@@ -586,12 +586,18 @@ void removeAccount(struct User u)
             choice = readInt("Are you sure you want to delete this account? (1) Yes (2) No: ");
 
             if (choice == 1)
-            {           
+            {    
+              int idToDelete = records[i].id;       
               for (int j = i; j < count - 1; j++)
             {
                 records[j] = records[j + 1];
             }
             count--;
+            if (!deleteRecord(idToDelete))
+                    {
+                        printf(RED "Error deleting record from database!\n" RESET);
+                    return;
+                    }
             saveAllRecords(records, count);
             printf(GREEN "Account removed successfully!\n" RESET);
         }

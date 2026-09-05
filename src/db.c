@@ -316,3 +316,57 @@ int deleteUser(int id)
     sqlite3_finalize(stmt);
     return 1;
 }
+
+void migrateUsersToDb(void)
+{
+    struct User txtUsers[100];
+    struct User dbUsers[100];
+
+    int txtCount = loadAllUsersFromTxt(txtUsers);
+    int dbCount = loadAllUsers(dbUsers);
+
+    for (int i = 0; i < txtCount; i++)
+    {
+        int found = 0;
+        for (int j = 0; j < dbCount; j++)
+        {
+            if (txtUsers[i].id == dbUsers[j].id)
+            {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            insertUser(&txtUsers[i]);
+        }
+    }
+}
+
+void migrateRecordsToDb(void)
+{
+    struct Record txtRecords[100];
+    struct Record dbRecords[100];
+
+    int txtCount = loadAllRecordsFromTxt(txtRecords);
+    int dbCount = loadAllRecords(dbRecords);
+
+    for (int i = 0; i < txtCount; i++)
+    {
+        int found = 0;
+        for (int j = 0; j < dbCount; j++)
+        {
+            if (txtRecords[i].id == dbRecords[j].id)
+            {
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            insertRecord(&txtRecords[i]);
+        }
+    }
+}
