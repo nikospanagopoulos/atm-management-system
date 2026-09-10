@@ -15,6 +15,11 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include <sqlite3.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <errno.h>
+#include <sys/types.h>
 extern sqlite3 *db; // Declare the global database pointer
 
 struct Date
@@ -282,6 +287,12 @@ void removeAccount(struct User u);
  * confirmation. Blocks self-transfers and unknown usernames.
 */
  void transferOwnership(struct User u);
+
+ /**
+ * Child-process listener: reads transfer notifications from the user's
+ * FIFO and prints them in real time. Runs until the process exits.
+*/
+ int startListener(struct User u);
 
  /**
  * Shared post-action prompt used by every feature function. If notGood is 0

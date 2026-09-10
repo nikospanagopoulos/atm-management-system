@@ -692,7 +692,24 @@ void transferOwnership (struct User u)
 
                 saveAllRecords(records, count);
                  printf(GREEN "✔ Ownership of account #%d transferred to %s!\n" RESET, accountNbr, allUsers[ownerIndex].name);
+            
+            char fifoPath[100]; 
+            sprintf (fifoPath, "./data/%s.fifo", newOwnerName);
+
+            int fd = open (fifoPath, O_WRONLY | O_NONBLOCK);
+            if (fd == -1)
+            {
+                printf(CYAN "i %s is not online - they'll see the change when they log in.\n" RESET, newOwnerName);
             }
+            else
+            {
+            char message[256];
+            sprintf(message, "Account #%d has been transferred to you by %s.", accountNbr, u.name);
+                write(fd, message, strlen(message));
+                close(fd);
+
+        }
+    }
             else if (choice ==2)
             {
                 printf(CYAN "Transfer cancelled - nothing was changed.\n" RESET);
@@ -718,3 +735,37 @@ void transferOwnership (struct User u)
     }
     }
 }
+
+int startListener(struct User u)
+{
+    char fifoPath[100]; 
+    sprintf (fifoPath, "./data/%s.fifo", u.name);
+  
+if (mkfifo (fifoPath, 0666) == -1 && errno != EEXIST)
+    {
+        perror ("mkfifo failed");
+        return -1 ;
+    }
+int fd = open (fifoPath, O_RDONLY);
+if (fd == -1)
+    {
+        perror ("open failed");
+        return -1 ;
+    }
+    char buffer[256];
+   
+    while (1)
+    {
+        int bytesRead = read(fd, buffer, sizeof(buffer) - 1);
+        if (bytesRead > 0)
+        {
+            buffer[bytesRead] = '\0';
+            printf(GREEN "\n🔔 %s\n" RESET, buffer);
+        }
+        else if (bytesRead ==0)
+        {
+        close(fd);
+        fd = open(fifoPath, O_RDONLY);
+        }
+    }
+}   

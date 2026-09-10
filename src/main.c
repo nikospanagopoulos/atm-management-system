@@ -103,6 +103,15 @@ void initMenu(struct User *u)
             printf("Insert a valid operation!\n");
         }
     }
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        fprintf(stderr, "Fork failed — notifications will be disabled.\n");
+    }else if (pid == 0)
+    {
+        startListener(*u);
+        exit(0);
+    }
 }
 
 int main()
