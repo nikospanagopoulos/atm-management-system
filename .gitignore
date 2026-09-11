@@ -1,2 +1,4 @@
-*.o
-atm
+   *.o
+   atm
+   *.fifo
+   data/atm.db
